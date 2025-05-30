@@ -64,6 +64,14 @@ async function run() {
 
         // Job applications related API
 
+        app.get('/applications/jobs/:job_id', async(req,res)=>{
+            const job_id = req.params.job_id;
+            console.log(job_id);
+            const query = {jobId: job_id}
+            const result = await applicationsCollection.find(query).toArray();
+            res.send(result)
+        })
+
         app.get('/applications',async(req,res)=>{
             const email =req.query.email
             const query = {
