@@ -16,11 +16,13 @@ using http only cookies
 
  set cookies
 
- 1. while calling the api tell to use withCredentials
+ 4. while calling the api tell to use withCredentials
 
  axios.post('http://localhost:3000/jwt',userData,{withCredentials:true})
+
+ or for fetch add option credential: 'include'
  
- 2.in the cors setting set credentials and origin
+ 5.in the cors setting set credentials and origin
 app.use(cors({
     origin:['http://localhost:5173/'],
     credentials:true,
@@ -32,5 +34,18 @@ app.use(cors({
                 httpOnly:true,
                 secure:false
             })
+                
+
+ ----------------------------------------
+ 7. on time: use cookiesParser as middleware
+ 8. for every api you want to verify token:
+ 
+ in the client side: 
+ if using axios withCredentials:true
+ for fetch: credentials include    
+ 
+ -------------------
+
+ verify token
 
 */
