@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 
 
 const port = process.env.PORT || 3000
@@ -10,11 +11,11 @@ require('dotenv').config()
 // respond with "hello world" when a GET request is made to the homepage
 
 //Middleware
-app.use(cors());
+app.use(cors({
+    origin:['http://localhost:5173'],
+    credentials:true,
+}));
 app.use(express.json())
-
-// job_portal_db
-//1FBrOZKVv4DlHtIx
 
 
 
@@ -39,12 +40,21 @@ async function run() {
         const applicationsCollection = client.db("job_portal").collection("applications")
 
         // JWT token related api
+
         app.post('/jwt',async(req,res)=>{
-            const {email} =res.body;
-            const user ={email}
-            const token = jwt.sign(user,'secret',{expiresIn: '1h'})
-            res.send({token})
+            const userData = req.body;
+            const token = jwt.sign(userData,process.env.JWT_ACCESS_SECRET, {expiresIn:'1d'})
+
+            // set token in the cookies
+
+            res.cookie('token',token,{
+                httpOnly:true,
+                secure:false
+            })
+
+            res.send({success:true})
         })
+        
 
         app.get('/jobs', async(req,res)=>{
 
