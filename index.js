@@ -18,6 +18,15 @@ app.use(cors({
 app.use(express.json())
 app.use(cookieParser())
 
+var admin = require("firebase-admin");
+
+var serviceAccount = require("./firebase-admin-key.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+
 
 const logger =(req,res,next)=>{
 console.log('inside the logger middleware')
@@ -27,7 +36,40 @@ next()
 const verifyToken=(req,res,next)=>{
     const token = req?.cookies?.token;
     console.log('Cookie in the middleware', token)
-    next()
+
+    if(!token){
+        return res.status(401).send({message:'Unauthorized Access'})
+    }
+
+    //verify token
+
+    jwt.verify(token,process.env.JWT_ACCESS_SECRET,(err,decoded)=>{
+        if(err){
+            return res.status(401).send({message:'Unauthorized Access'})
+        }
+        
+        req.decoded = decoded;
+        // console.log(decoded)
+        next()
+    })
+
+    // next()
+}
+
+
+const verifyFirebaseToken =async (req,res,next) =>{
+    const authHeader = req.headers?.authorization;
+    const token = authHeader.split(' ')[1];
+
+    if(!token){
+        return res.status(401).send({message: 'unauthorized access'})
+    }
+
+    const userInfo = await  admin.auth().verifyIdToken(token)
+    req.tokenEmail = userInfo.email;
+    next();
+
+    // console.log('inside token',userInfo)
 }
 
 
@@ -105,8 +147,16 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/applications',logger, verifyToken ,async(req,res)=>{
+        app.get('/applications',logger, verifyFirebaseToken,async(req,res)=>{
             const email =req.query.email
+
+            if(req.tokenEmail != email){
+                return res.status(403).send({message: 'forbidden access'})
+            }
+
+            if(email !== req.decoded.email){
+                return res.status(403).send({message: 'Forbidden Access'})
+            }
 
             console.log('inside applications api',req.cookies)
 
